@@ -37,7 +37,7 @@ function useLauncher() {
   });
 
   React.useEffect(() => {
-    if (socket) {
+    if (false && socket) {
       socket.on('data', data => {
         console.log(data);
         setLauncherData(data);
@@ -72,9 +72,37 @@ function useLauncher() {
   return [launcherData, air, water, launch];
 }
 
+function useLauncherButton() {
+  function reducer(state, action) {
+    switch (action.type) {
+      case 'BUTTON_PRESSED':
+        return {
+          pressed: true,
+        };
+      case 'BUTTON_RELEASED':
+        return {
+          pressed: false,
+        };
+      default:
+        throw new Error('Unknown action type', action);
+    }
+  }
+
+  const [state, dispatch] = React.useReducer(reducer, { pressed: false });
+
+  React.useEffect(() => {
+    state.pressed ? console.log('pressed') : console.log('released');
+  });
+
+  return [state, dispatch];
+}
+
 function App() {
+  console.log('rendering');
   const [gradient] = useGradient(['#e175e7', '#9473f7']);
   const [launcherData, air, water, launch] = useLauncher();
+
+  const [state, dispatch] = useLauncherButton();
 
   function formatAirPressure(value) {
     return `${Math.trunc(value)} psi`;
@@ -82,6 +110,7 @@ function App() {
   function formatVoltage(value) {
     return `${value.toFixed(2)} v`;
   }
+
   function handleGamepadConnected(gamepadIndex) {
     console.log(`Gamepad ${gamepadIndex} connected !`);
   }
@@ -180,6 +209,13 @@ function App() {
               handleButtonUp={() => water(false)}
             />
             <Button text="Launch" handleButtonClick={launch} />
+
+            <a
+              onMouseDown={() => dispatch({ type: 'BUTTON_PRESSED' })}
+              onMouseUp={() => dispatch({ type: 'BUTTON_RELEASED' })}
+            >
+              <B pressed={state.pressed} />
+            </a>
           </div>
         </div>
       </div>
@@ -187,7 +223,13 @@ function App() {
   );
 }
 
-function Button({ text, handleButtonDown, handleButtonUp, handleButtonClick }) {
+function B({ pressed, onPressed, onReleased }) {
+  return pressed ? <div>PRESSED</div> : <div>RELEASED</div>;
+}
+
+function Button({ text, pressed, handleButtonDown, handleButtonUp, handleButtonClick }) {
+  // const [pressed, setPressed] = React.useState(false);
+
   const btnStyle = css`
     height: 50px;
     line-height: 50px;
@@ -209,14 +251,19 @@ function Button({ text, handleButtonDown, handleButtonUp, handleButtonClick }) {
     margin: 5px;
   `;
 
+  function buttonDown() {
+    // setPressed(true);
+    handleButtonDown && handleButtonDown();
+  }
+
+  function buttonUp() {
+    // setPressed(false);
+    handleButtonUp && handleButtonUp();
+  }
+
   return (
-    <a
-      css={btnStyle}
-      onMouseDown={handleButtonDown}
-      onMouseUp={handleButtonUp}
-      onClick={handleButtonClick}
-    >
-      {text}
+    <a css={btnStyle} onMouseDown={buttonDown} onMouseUp={buttonUp} onClick={handleButtonClick}>
+      {text} {pressed && '****'}
     </a>
   );
 }
