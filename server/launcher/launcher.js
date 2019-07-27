@@ -42,7 +42,7 @@ class Launcher extends EventEmitter {
       let pressureSensor = new five.Sensor(this.opts.pressurePin);
 
       pressureSensor.on('change', function() {
-        console.log(this.value);
+        // console.log(this.value);
         // Scale for voltage
         launcher.voltage = this.fscaleTo(0, launcher.opts.pinVoltage);
 
