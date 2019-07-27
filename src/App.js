@@ -1,224 +1,233 @@
-import React from 'react';
-import './App.css';
-import Logo from './nrlogo.png';
-import Gauge from 'react-svg-gauge';
-import tinygradient from 'tinygradient';
-import socketClient from 'socket.io-client';
-import Gamepad from 'react-gamepad';
+import React from 'react'
+import Logo from './nrlogo.png'
+import tinygradient from 'tinygradient'
+import Gamepad from 'react-gamepad'
+import Switch from './Switch'
+import Gauge from './Gauge'
+import useLauncherIO from './launcher-io'
 
 // this comment tells babel to convert jsx to calls to a function called jsx instead of React.createElement
 /** @jsx jsx */
-import { jsx, css } from '@emotion/core';
+import { jsx, css } from '@emotion/core'
 
-function useGradient(colors) {
-  const [gradient] = React.useState(tinygradient(colors));
-  return [gradient];
-}
-
-function useWebSocket(url) {
-  const [socket, setSocket] = React.useState();
-  React.useEffect(() => {
-    const _socket = socketClient(url);
-    setSocket(_socket);
-
-    return () => {
-      _socket.close();
-    };
-  }, [url]);
-  return [socket];
-}
-
-function useLauncher() {
-  const [socket] = useWebSocket('http://localhost:3001');
-  const [launcherData, setLauncherData] = React.useState({
-    connected: false,
-    voltage: 0,
-    pressure: 0,
-  });
-
-  React.useEffect(() => {
-    if (socket) {
-      socket.on('data', data => {
-        console.log(data);
-        setLauncherData(data);
-      });
-
-      return () => {
-        socket.close();
-      };
-    }
-  }, [socket]);
-
-  function air(on) {
-    if (on) {
-      socket.emit('open-air');
-    } else {
-      socket.emit('close-air');
+function useLauncherButton() {
+  function reducer(state, action) {
+    console.log(action, state)
+    switch (action.type) {
+      case 'AIR_BUTTON_PRESSED':
+        return {
+          ...state,
+          airPressed: true,
+        }
+      case 'AIR_BUTTON_RELEASED':
+        return {
+          ...state,
+          airPressed: false,
+        }
+      case 'WATER_BUTTON_PRESSED':
+        return {
+          ...state,
+          waterPressed: true,
+        }
+      case 'WATER_BUTTON_RELEASED':
+        return {
+          ...state,
+          waterPressed: false,
+        }
+      case 'LAUNCH_BUTTON_PRESSED':
+        return {
+          ...state,
+          launchPressed: true,
+        }
+      case 'LAUNCH_BUTTON_RELEASED':
+        return {
+          ...state,
+          launchPressed: false,
+        }
+      case 'LAUNCHER_DATA_RECEIVED':
+        return {
+          ...state,
+          launcherData: action.launcherData,
+        }
+      default:
+        throw new Error('Unknown action type', action.type)
     }
   }
 
-  function water(on) {
-    if (on) {
-      socket.emit('open-water');
-    } else {
-      socket.emit('close-water');
-    }
-  }
-
-  function launch() {
-    socket.emit('launch');
-  }
-
-  return [launcherData, air, water, launch];
+  return React.useReducer(reducer, {
+    airPressed: false,
+    waterPressed: false,
+    launchPressed: false,
+    launcherData: { voltage: 0, psi: 0 },
+  })
 }
 
 function App() {
-  const [gradient] = useGradient(['#e175e7', '#9473f7']);
-  const [launcherData, air, water, launch] = useLauncher();
+  const [state, dispatch] = useLauncherButton()
+  const [air, water, launch] = useLauncherIO(dispatch)
+  const gradient = tinygradient([{ color: '#E175E7', pos: 0.7 }, { color: '#9473F7', pos: 1 }])
+
+  function handleGamepadConnected(gamepadIndex) {
+    console.log(`Gamepad ${gamepadIndex} connected !`)
+  }
+
+  function airValve(open) {
+    open ? dispatch({ type: 'AIR_BUTTON_PRESSED' }) : dispatch({ type: 'AIR_BUTTON_RELEASED' })
+    air(open)
+  }
+
+  function waterValve(open) {
+    open ? dispatch({ type: 'WATER_BUTTON_PRESSED' }) : dispatch({ type: 'WATER_BUTTON_RELEASED' })
+    water(open)
+  }
+
+  function launchValve(open) {
+    open
+      ? dispatch({ type: 'LAUNCH_BUTTON_PRESSED' })
+      : dispatch({ type: 'LAUNCH_BUTTON_RELEASED' })
+
+    if (open) launch()
+  }
 
   function formatAirPressure(value) {
-    return `${Math.trunc(value)} psi`;
+    return `${Math.trunc(value)} psi`
   }
   function formatVoltage(value) {
-    return `${value.toFixed(2)} v`;
-  }
-  function handleGamepadConnected(gamepadIndex) {
-    console.log(`Gamepad ${gamepadIndex} connected !`);
+    return `${value.toFixed(2)} v`
   }
 
   function handleButtonChange(btn, pressed) {
     switch (btn) {
       case 'LT':
-        air(pressed);
-        break;
+        airValve(pressed)
+        break
       case 'RT':
-        water(pressed);
-        break;
+        waterValve(pressed)
+        break
       case 'A':
-        launch();
-        break;
+        launchValve(pressed)
+        break
       default:
-        break;
+        break
     }
   }
+
+  const containerCss = css`
+    position: relative;
+    min-height: 100vh;
+    overflow: auto;
+    min-width: 440px;
+  `
+
+  const contentCss = css`
+    max-width: 800px;
+    min-width: 380px;
+    margin: auto;
+    padding: 2rem;
+    padding-bottom: 3.5rem;
+  `
+
+  const gaugePanelCss = css`
+    text-align: center;
+    margin-top: 20px;
+  `
+
+  const switchPanel = css`
+    display: flex;
+    margin: 20px auto 0px auto;
+    max-width: 440px;
+    justify-content: space-around;
+  `
+
+  const footerCss = css`
+    display: flex;
+    justify-content: space-between;
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 2.5rem;
+    /* padding: 3px; */
+    /* background: linear-gradient(#9473f7, #e175e7); */
+    background: #e175e7;
+    color: white;
+    line-height: 2.5rem;
+  `
   return (
     <Gamepad
       onConnect={handleGamepadConnected}
       onRT={handleButtonChange}
       onButtonChange={handleButtonChange}
     >
-      <div
-        css={css`
-          background: linear-gradient(#9473f7, #e175e7);
-          padding: 30px;
-          height: 100vh;
-          overflow: auto;
-          min-width: 440px;
-        `}
-      >
-        <div
-          css={css`
-            max-width: 800px;
-            min-width: 380px;
-            margin: 13px;
-            background: white;
-            margin: auto;
-            padding: 20px;
-            border-radius: 15px;
-          `}
-        >
+      <div css={containerCss}>
+        <div css={contentCss}>
           <div>
             <img src={Logo} width="100" alt="NodeRockets" />
           </div>
 
-          <div
-            css={css`
-              text-align: center;
-            `}
-          >
+          <div css={gaugePanelCss}>
             <Gauge
-              color={gradient.rgbAt(launcherData.pressure / 160)}
-              valueLabelStyle={{ fontSize: '32px' }}
-              xbackgroundColor="darkgray"
-              height={200}
-              width={300}
-              value={launcherData.pressure}
               label="Air Pressure"
               min={0}
               max={150}
+              color={gradient.rgbAt(state.launcherData.pressure / 160)}
+              value={state.launcherData.pressure}
               valueFormatter={formatAirPressure}
             />
 
             <Gauge
-              color={gradient.rgbAt(launcherData.voltage / 5)}
-              valueLabelStyle={{ fontSize: '32px' }}
-              xbackgroundColor="white"
-              height={200}
-              width={300}
-              value={launcherData.voltage}
               label="Voltage"
               min={0}
               max={5}
+              color={gradient.rgbAt(state.launcherData.voltage / 5)}
+              value={state.launcherData.voltage}
               valueFormatter={formatVoltage}
             />
           </div>
 
-          <div
-            css={css`
-              display: flex;
-              justify-content: center;
-            `}
-          >
-            <Button
-              text="Air"
-              handleButtonDown={() => air(true)}
-              handleButtonUp={() => air(false)}
+          <div css={switchPanel}>
+            <Switch
+              label="Air"
+              isOn={state.airPressed}
+              onColor="#44AF69"
+              handleDown={() => {
+                airValve(true)
+              }}
+              handleUp={() => {
+                airValve(false)
+              }}
             />
-            <Button
-              text="Water"
-              handleButtonDown={() => water(true)}
-              handleButtonUp={() => water(false)}
+
+            <Switch
+              label="Water"
+              isOn={state.waterPressed}
+              onColor="#10C7E3"
+              handleDown={() => {
+                waterValve(true)
+              }}
+              handleUp={() => {
+                waterValve(false)
+              }}
             />
-            <Button text="Launch" handleButtonClick={launch} />
+
+            <Switch
+              label="Launch"
+              isOn={state.launchPressed}
+              onColor="#F8333C"
+              handleDown={() => {
+                launchValve(true)
+              }}
+              handleUp={() => {
+                launchValve(false)
+              }}
+            />
           </div>
         </div>
+        <footer css={footerCss}>
+          <span>Hello</span>
+        </footer>
       </div>
     </Gamepad>
-  );
+  )
 }
 
-function Button({ text, handleButtonDown, handleButtonUp, handleButtonClick }) {
-  const btnStyle = css`
-    height: 50px;
-    line-height: 50px;
-    font-size: 22px;
-    font-weight: bold;
-    text-transform: uppercase;
-    color: #9473f7;
-    text-align: center;
-    width: 150px;
-    box-shadow: 0 0 2px #777;
-    border: 1px solid #9473f7;
-    /* border: 3px solid;
-    border-image: linear-gradient(#9473f7, #e175e7) 1; */
-    &:active {
-      color: white;
-      /* background:linear-gradient(#9473f7,#e175e7); */
-      background: #9473f7;
-    }
-    margin: 5px;
-  `;
-
-  return (
-    <a
-      css={btnStyle}
-      onMouseDown={handleButtonDown}
-      onMouseUp={handleButtonUp}
-      onClick={handleButtonClick}
-    >
-      {text}
-    </a>
-  );
-}
-
-export default App;
+export default App

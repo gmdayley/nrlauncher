@@ -1,68 +1,68 @@
-const express = require('express');
-const http = require('http');
-const socketIO = require('socket.io');
+const express = require('express')
+const http = require('http')
+const socketIO = require('socket.io')
 // const { ArduinoUnoLauncher: Launcher } = require('./launcher/launcher');
 // const launcher = new Launcher();
 
-const { ParticleLauncher: Launcher } = require('./launcher/launcher');
-const { token, deviceId } = require('./config.json').particle;
-const launcher = new Launcher(token, deviceId);
+const { ParticleLauncher: Launcher } = require('./launcher/launcher')
+const { token, deviceId } = require('./config.json').particle
+const launcher = new Launcher(token, deviceId)
 
 // our localhost port
-const port = process.env.PORT || 3001;
+const port = process.env.PORT || 3001
 
-const app = express();
+const app = express()
 
 // our server instance
-const server = http.createServer(app);
+const server = http.createServer(app)
 
 // This creates our socket using the instance of the server
-const io = socketIO(server);
+const io = socketIO(server)
 
 io.on('connection', socket => {
-  console.log('client connected');
+  console.log('client connected')
 
   socket.on('open-water', () => {
-    console.log('open-water');
-    launcher.openWater();
-  });
+    console.log('open-water')
+    launcher.openWater()
+  })
 
   socket.on('close-water', () => {
-    console.log('close-water');
-    launcher.closeWater();
-  });
+    console.log('close-water')
+    launcher.closeWater()
+  })
 
   socket.on('open-air', () => {
-    console.log('open-air');
-    launcher.openAir();
-  });
+    console.log('open-air')
+    launcher.openAir()
+  })
 
   socket.on('close-air', () => {
-    console.log('close-air');
-    launcher.closeAir();
-  });
+    console.log('close-air')
+    launcher.closeAir()
+  })
 
   socket.on('launch', () => {
-    console.log('launch');
-    launcher.launch();
-  });
+    console.log('launch')
+    launcher.launch()
+  })
 
   setInterval(() => {
-    const { voltage, pressure, ready } = launcher;
-    socket.emit('data', { ready, voltage, pressure });
-  }, 100);
+    const { voltage, pressure, ready } = launcher
+    socket.emit('data', { ready, voltage, pressure })
+  }, 100)
 
   launcher.on('ready', () => {
-    console.log(`launcher ready`);
+    console.log(`launcher ready`)
     // socket.emit('data');
-    socket.emit('launcher-ready');
-  });
+    socket.emit('launcher-ready')
+  })
 
   launcher.on('error', error => {
-    console.log(`Error: ${error.message}`);
-  });
-});
+    console.log(`Error: ${error.message}`)
+  })
+})
 
-// app.use(express.static("build"));
+app.use(express.static('../build'))
 
-server.listen(port, () => console.log(`Listening on port ${port}`));
+server.listen(port, () => console.log(`Listening on port ${port}`))

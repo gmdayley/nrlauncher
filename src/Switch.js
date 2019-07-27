@@ -1,18 +1,26 @@
+import React from 'react';
 // this comment tells babel to convert jsx to calls to a function called jsx instead of React.createElement
 /** @jsx jsx */
 import { jsx, css } from '@emotion/core';
 
-export default function Switch({
+function Switch({
   isOn,
-  onColor = 'hotpink',
-  knobColor = 'hotpink',
-  backgroundColor = 'grey',
+  onColor = '#F8333C',
+  knobColor = '#FFF',
+  backgroundColor = '#BCBCBC',
   handleDown,
   handleUp,
   handleToggle,
-  text,
   label,
 }) {
+  const labelCss = css`
+    text-align: center;
+    color: #9a9a9a;
+    color: #777;
+    text-transform: uppercase;
+    position: relative;
+    top: 4px;
+  `;
   const switchCss = css`
     display: flex;
     align-items: center;
@@ -25,15 +33,15 @@ export default function Switch({
     position: relative;
     transition: background-color 0.2s;
 
-    span:nth-child(1) {
+    span {
       content: '';
       position: absolute;
-      top: 2px;
-      left: ${isOn ? 'calc(100% - 2px)' : '2px'};
+      top: 5px;
+      left: ${isOn ? 'calc(100% - 5px)' : '5px'};
       transform: ${isOn ? 'translateX(-100%);' : 'translateX(0%);'};
-      width: 45px;
-      height: 45px;
-      border-radius: 45px;
+      width: 40px;
+      height: 40px;
+      border-radius: 40px;
       transition: 0.2s;
       background: ${knobColor};
       box-shadow: 0 0 2px 0 rgba(10, 10, 10, 0.29);
@@ -46,8 +54,20 @@ export default function Switch({
   `;
 
   return (
-    <div css={switchCss} onMouseDown={handleDown} onMouseUp={handleUp}>
-      <span />
+    <div>
+      <div
+        css={switchCss}
+        onClick={handleToggle}
+        onTouchStart={handleDown}
+        onTouchEnd={handleDown}
+        onMouseDown={handleDown}
+        onMouseUp={handleUp}
+      >
+        <span />
+      </div>
+      <div css={labelCss}>{label}</div>
     </div>
   );
 }
+
+export default React.memo(Switch);
