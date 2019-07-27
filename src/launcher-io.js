@@ -20,6 +20,7 @@ export default function useLauncher(dispatch) {
   React.useEffect(() => {
     if (socket) {
       socket.on('data', data => {
+        console.log(data)
         dispatch({ type: 'LAUNCHER_DATA_RECEIVED', launcherData: data })
       })
 

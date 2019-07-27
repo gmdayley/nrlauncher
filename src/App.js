@@ -4,6 +4,7 @@ import tinygradient from 'tinygradient'
 import Gamepad from 'react-gamepad'
 import Switch from './Switch'
 import Gauge from './Gauge'
+import Footer from './Footer'
 import useLauncherIO from './launcher-io'
 
 // this comment tells babel to convert jsx to calls to a function called jsx instead of React.createElement
@@ -12,7 +13,7 @@ import { jsx, css } from '@emotion/core'
 
 function useLauncherButton() {
   function reducer(state, action) {
-    console.log(action, state)
+    // console.log(action, state)
     switch (action.type) {
       case 'AIR_BUTTON_PRESSED':
         return {
@@ -58,16 +59,19 @@ function useLauncherButton() {
     airPressed: false,
     waterPressed: false,
     launchPressed: false,
-    launcherData: { voltage: 0, psi: 0 },
+    launcherData: { name: 'Not Connected', voltage: 0, psi: 0 },
   })
 }
 
 function App() {
   const [state, dispatch] = useLauncherButton()
   const [air, water, launch] = useLauncherIO(dispatch)
+  const [controller, setController] = React.useState()
+  const [lastLaunchPsi, setLastLaunchPsi] = React.useState()
   const gradient = tinygradient([{ color: '#E175E7', pos: 0.7 }, { color: '#9473F7', pos: 1 }])
 
   function handleGamepadConnected(gamepadIndex) {
+    setController(navigator.getGamepads()[0])
     console.log(`Gamepad ${gamepadIndex} connected !`)
   }
 
@@ -86,7 +90,10 @@ function App() {
       ? dispatch({ type: 'LAUNCH_BUTTON_PRESSED' })
       : dispatch({ type: 'LAUNCH_BUTTON_RELEASED' })
 
-    if (open) launch()
+    if (open) {
+      launch()
+      setLastLaunchPsi(Math.trunc(state.launcherData.pressure))
+    }
   }
 
   function formatAirPressure(value) {
@@ -136,21 +143,7 @@ function App() {
     display: flex;
     margin: 20px auto 0px auto;
     max-width: 440px;
-    justify-content: space-around;
-  `
-
-  const footerCss = css`
-    display: flex;
-    justify-content: space-between;
-    position: absolute;
-    bottom: 0;
-    width: 100%;
-    height: 2.5rem;
-    /* padding: 3px; */
-    /* background: linear-gradient(#9473f7, #e175e7); */
-    background: #e175e7;
-    color: white;
-    line-height: 2.5rem;
+    justify-content: space-evenly;
   `
   return (
     <Gamepad
@@ -222,9 +215,7 @@ function App() {
             />
           </div>
         </div>
-        <footer css={footerCss}>
-          <span>Hello</span>
-        </footer>
+        <Footer launchPsi={lastLaunchPsi} board={state.launcherData.name} controller={controller} />
       </div>
     </Gamepad>
   )
