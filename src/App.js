@@ -6,6 +6,7 @@ import Switch from './Switch'
 import Gauge from './Gauge'
 import Footer from './Footer'
 import useLauncherIO from './launcher-io'
+// import KeyboardController from './KeyboardController'
 
 // this comment tells babel to convert jsx to calls to a function called jsx instead of React.createElement
 /** @jsx jsx */
@@ -72,7 +73,7 @@ function App() {
 
   function handleGamepadConnected(gamepadIndex) {
     setController(navigator.getGamepads()[0])
-    console.log(`Gamepad ${gamepadIndex} connected !`)
+    console.log(`Gamepad ${gamepadIndex} connected!`)
   }
 
   function airValve(open) {
@@ -86,12 +87,13 @@ function App() {
   }
 
   function launchValve(open) {
+    console.log('launch valve', open)
     open
       ? dispatch({ type: 'LAUNCH_BUTTON_PRESSED' })
       : dispatch({ type: 'LAUNCH_BUTTON_RELEASED' })
 
+    launch(open)
     if (open) {
-      launch()
       setLastLaunchPsi(Math.trunc(state.launcherData.pressure))
     }
   }
@@ -123,14 +125,15 @@ function App() {
     position: relative;
     min-height: 100vh;
     overflow: auto;
-    min-width: 440px;
+    min-width: 410px;
   `
 
   const contentCss = css`
     max-width: 800px;
     min-width: 380px;
     margin: auto;
-    padding: 2rem;
+    /* padding: 2rem; */
+    padding: 15px;
     padding-bottom: 3.5rem;
   `
 
@@ -198,6 +201,7 @@ function App() {
                 waterValve(true)
               }}
               handleUp={() => {
+                console.log('water up')
                 waterValve(false)
               }}
             />
@@ -207,9 +211,11 @@ function App() {
               isOn={state.launchPressed}
               onColor="#F8333C"
               handleDown={() => {
+                console.log('launch down')
                 launchValve(true)
               }}
               handleUp={() => {
+                console.log('launch up')
                 launchValve(false)
               }}
             />

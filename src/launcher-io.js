@@ -20,7 +20,7 @@ export default function useLauncher(dispatch) {
   React.useEffect(() => {
     if (socket) {
       socket.on('data', data => {
-        console.log(data)
+        // console.log(data)
         dispatch({ type: 'LAUNCHER_DATA_RECEIVED', launcherData: data })
       })
 
@@ -46,9 +46,18 @@ export default function useLauncher(dispatch) {
     }
   }
 
-  function launch() {
-    socket.emit('launch')
+  function launch(on) {
+    console.log('launchy says', on)
+    if (on) {
+      socket.emit('open-launch')
+    } else {
+      socket.emit('close-launch')
+    }
   }
+
+  // function launch() {
+  //   socket.emit('launch')
+  // }
 
   return [air, water, launch]
 }

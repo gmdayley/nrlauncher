@@ -1,7 +1,7 @@
-import React from 'react';
+import React from 'react'
 // this comment tells babel to convert jsx to calls to a function called jsx instead of React.createElement
 /** @jsx jsx */
-import { jsx, css } from '@emotion/core';
+import { jsx, css } from '@emotion/core'
 
 function Switch({
   isOn,
@@ -20,7 +20,7 @@ function Switch({
     text-transform: uppercase;
     position: relative;
     top: 4px;
-  `;
+  `
   const switchCss = css`
     display: flex;
     align-items: center;
@@ -32,6 +32,7 @@ function Switch({
     border-radius: 100px;
     position: relative;
     transition: background-color 0.2s;
+    -webkit-tap-highlight-color: transparent;
 
     span {
       content: '';
@@ -51,23 +52,29 @@ function Switch({
         width: 60px;
       }
     } */
-  `;
+  `
 
   return (
     <div>
       <div
         css={switchCss}
-        onClick={handleToggle}
-        onTouchStart={handleDown}
-        onTouchEnd={handleDown}
-        onMouseDown={handleDown}
-        onMouseUp={handleUp}
+        // onClick={handleToggle}
+        // onTouchStart={handleDown}
+        // onTouchEnd={handleDown}
+        // onMouseDown={handleDown}
+        // onMouseUp={handleUp}
+        // onMouseOverCapture={() => console.log('over')}
+        // onMouseOutCapture={() => console.log('out')}
+        onPointerDown={handleDown}
+        onPointerUp={handleUp}
+        // onLostPointerCapture={handleUp}
+        // onMouseOut={handleUp}
       >
         <span />
       </div>
       <div css={labelCss}>{label}</div>
     </div>
-  );
+  )
 }
 
-export default React.memo(Switch);
+export default React.memo(Switch)
