@@ -1,12 +1,12 @@
 const express = require('express')
 const http = require('http')
 const socketIO = require('socket.io')
-// const { ArduinoUnoLauncher: Launcher } = require('./launcher/launcher');
-// const launcher = new Launcher();
+const { ArduinoUnoLauncher: Launcher } = require('./launcher/launcher')
+const launcher = new Launcher()
 
-const { ParticleLauncher: Launcher } = require('./launcher/launcher')
-const { token, deviceId } = require('./config.json').particle
-const launcher = new Launcher(token, deviceId)
+// const { ParticleLauncher: Launcher } = require('./launcher/launcher')
+// const { token, deviceId } = require('./config.json').particle
+// const launcher = new Launcher(token, deviceId)
 
 // our localhost port
 const port = process.env.PORT || 3001
@@ -40,6 +40,16 @@ io.on('connection', socket => {
   socket.on('close-air', () => {
     console.log('close-air')
     launcher.closeAir()
+  })
+
+  socket.on('open-launch', () => {
+    console.log('open-launch')
+    launcher.openLaunch()
+  })
+
+  socket.on('close-launch', () => {
+    console.log('close-launch')
+    launcher.closeLaunch()
   })
 
   socket.on('launch', () => {

@@ -43,16 +43,21 @@ class Launcher extends EventEmitter {
       let pressureSensor = new five.Sensor(this.opts.pressurePin)
 
       pressureSensor.on('change', function() {
-        // console.log(this.value);
+        console.log(this.value)
         // Scale for voltage
         launcher.voltage = this.fscaleTo(0, launcher.opts.pinVoltage)
 
+        launcher.pressure = this.fscaleTo(0, 150)
+
+        /**
         // Solve for Z2:  Z2 = Z1 / ((Vin / Vout) - 1)
         let z2 = launcher.opts.z1 / (launcher.opts.pinVoltage / launcher.voltage) - 1
 
         // Vout = (Z2 / (Z1 + Z2)) * Vin
         let rawPressure = launcher.opts.slope * z2 + launcher.opts.yint
         launcher.pressure = Math.max(0, Math.min(rawPressure, 160))
+
+        */
       })
 
       this.ready = true
@@ -82,6 +87,14 @@ class Launcher extends EventEmitter {
 
   closeWater() {
     if (this.ready) this.board.digitalWrite(this.opts.waterPin, 0)
+  }
+
+  openLaunch() {
+    if (this.ready) this.board.digitalWrite(this.opts.launchPin, 1)
+  }
+
+  closeLaunch() {
+    if (this.ready) this.board.digitalWrite(this.opts.launchPin, 0)
   }
 
   launch(waitToClose = 1000) {
