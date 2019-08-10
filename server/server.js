@@ -58,8 +58,8 @@ io.on('connection', socket => {
   })
 
   setInterval(() => {
-    const { name, voltage, pressure, ready } = launcher
-    socket.emit('data', { name, ready, voltage, pressure })
+    const { name, voltage, psi, ready } = launcher
+    socket.emit('data', { name, ready, voltage, psi })
   }, 100)
 
   launcher.on('ready', () => {

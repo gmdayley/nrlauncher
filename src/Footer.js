@@ -4,7 +4,10 @@
 /** @jsx jsx */
 import { jsx, css } from '@emotion/core'
 
-export default function({ board, controller, launchPsi = '?' }) {
+import { GoRocket, GoDashboard } from 'react-icons/go'
+import { GiConsoleController } from 'react-icons/gi'
+
+export default function({ launcher, controller, launchPsi = 'N/A' }) {
   const footerCss = css`
     position: absolute;
     bottom: 0;
@@ -14,37 +17,50 @@ export default function({ board, controller, launchPsi = '?' }) {
     color: white;
 
     > div {
-      display: flex;
-      justify-content: space-between;
-      margin: 5px 15px 5px 15px;
-      line-height: 30px;
+      padding: 0 10px;
+      height: 100%;
+      display: grid;
+      grid-template-columns: 30px 30px auto 80px;
     }
   `
 
-  const itemCss = css`
-    max-width: calc(32%);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  `
   return (
     <footer css={footerCss}>
       <div>
-        <div css={itemCss}>
-          <span>Board: </span>
-          <span>{board}</span>
-        </div>
-
-        <div css={itemCss}>
-          <span>Last Launch: </span>
-          <span>{launchPsi} psi</span>
-        </div>
-
-        <div css={itemCss}>
-          <span>Controller: </span>
-          <span>{controller ? controller.id : 'Not Connected'}</span>
+        <div>{launcher.ready && <IconLabel Icon={GoRocket} />}</div>
+        <div>{controller && <IconLabel Icon={GiConsoleController} />}</div>
+        <div />
+        <div>
+          <IconLabel Icon={GoDashboard} label={`${launchPsi} psi`} />
         </div>
       </div>
     </footer>
+  )
+}
+
+function IconLabel({ Icon, label }) {
+  const itemCss = css`
+    font-size: 20px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+
+    span:nth-child(1) {
+      font-size: 20px;
+      line-height: 40px;
+    }
+    span:nth-child(2) {
+      margin: 5px;
+      font-size: 14px;
+    }
+  `
+
+  return (
+    <div css={itemCss}>
+      <span>
+        <Icon />
+      </span>
+      <span>{label}</span>
+    </div>
   )
 }

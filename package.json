@@ -9,6 +9,7 @@
     "react-dom": "^16.8.6",
     "react-gamepad": "^1.0.3",
     "react-grid-system": "^4.4.10",
+    "react-icons": "^3.7.0",
     "react-scripts": "3.0.1",
     "react-svg-gauge": "^1.0.10",
     "socket.io-client": "^2.2.0",

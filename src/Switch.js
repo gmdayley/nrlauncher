@@ -65,7 +65,11 @@ function Switch({
         // onMouseUp={handleUp}
         // onMouseOverCapture={() => console.log('over')}
         // onMouseOutCapture={() => console.log('out')}
-        onPointerDown={handleDown}
+        onPointerDown={e => {
+          e.stopPropagation()
+          e.preventDefault()
+          handleDown()
+        }}
         onPointerUp={handleUp}
         // onLostPointerCapture={handleUp}
         // onMouseOut={handleUp}

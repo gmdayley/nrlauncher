@@ -13,8 +13,6 @@ class Launcher extends EventEmitter {
         waterPin: 4,
         pressurePin: 'A1',
         z1: 270,
-        slope: 0.54789,
-        yint: -2.22689,
         pinVoltage: 5,
         pinMaxAnalogValue: 1023,
       },
@@ -24,7 +22,7 @@ class Launcher extends EventEmitter {
     // Data
     this.name = name
     this.ready = false
-    this.pressure = 0
+    this.psi = 0
     this.voltage = 0
   }
 
@@ -47,17 +45,11 @@ class Launcher extends EventEmitter {
         // Scale for voltage
         launcher.voltage = this.fscaleTo(0, launcher.opts.pinVoltage)
 
-        launcher.pressure = this.fscaleTo(0, 150)
-
-        /**
-        // Solve for Z2:  Z2 = Z1 / ((Vin / Vout) - 1)
-        let z2 = launcher.opts.z1 / (launcher.opts.pinVoltage / launcher.voltage) - 1
-
-        // Vout = (Z2 / (Z1 + Z2)) * Vin
-        let rawPressure = launcher.opts.slope * z2 + launcher.opts.yint
-        launcher.pressure = Math.max(0, Math.min(rawPressure, 160))
-
-        */
+        // https://www.amazon.com/Pressure-Transducer-Sender-Sensor-Stainless/dp/B0748CV4G1/ref=asc_df_B0748BHLQL/?tag=&linkCode=df0&hvadid=312179635408&hvpos=1o4&hvnetw=g&hvrand=15704198629500178214&hvpone=&hvptwo=&hvqmt=&hvdev=c&hvdvcmdl=&hvlocint=&hvlocphy=9029705&hvtargid=pla-491658188060&ref=&adgrpid=61727971106&th=1
+        // Output: 0.5-4.5V linear voltage output. 0 psi outputs 0.5V, 75 psi outputs 2.5V, 150 psi outputs 4.5V
+        // y = 37.5x - 18.75
+        let psi = 37.5 * launcher.voltage - 18.75
+        launcher.psi = Math.min(150, Math.max(0, psi))
       })
 
       this.ready = true

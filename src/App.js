@@ -1,18 +1,17 @@
 import React from 'react'
-import Logo from './nrlogo.png'
 import tinygradient from 'tinygradient'
 import Gamepad from 'react-gamepad'
 import Switch from './Switch'
 import Gauge from './Gauge'
+import Header from './Header'
 import Footer from './Footer'
 import useLauncherIO from './launcher-io'
-// import KeyboardController from './KeyboardController'
 
 // this comment tells babel to convert jsx to calls to a function called jsx instead of React.createElement
 /** @jsx jsx */
 import { jsx, css } from '@emotion/core'
 
-function useLauncherButton() {
+function useLauncherState() {
   function reducer(state, action) {
     // console.log(action, state)
     switch (action.type) {
@@ -49,7 +48,7 @@ function useLauncherButton() {
       case 'LAUNCHER_DATA_RECEIVED':
         return {
           ...state,
-          launcherData: action.launcherData,
+          launcher: action,
         }
       default:
         throw new Error('Unknown action type', action.type)
@@ -60,16 +59,20 @@ function useLauncherButton() {
     airPressed: false,
     waterPressed: false,
     launchPressed: false,
-    launcherData: { name: 'Not Connected', voltage: 0, psi: 0 },
+    launcherData: { name: 'Unknown', ready: false, voltage: 0, psi: 0 },
   })
 }
 
 function App() {
-  const [state, dispatch] = useLauncherButton()
+  const [{ airPressed, waterPressed, launchPressed, launcherData }, dispatch] = useLauncherState()
   const [air, water, launch] = useLauncherIO(dispatch)
   const [controller, setController] = React.useState()
   const [lastLaunchPsi, setLastLaunchPsi] = React.useState()
   const gradient = tinygradient([{ color: '#E175E7', pos: 0.7 }, { color: '#9473F7', pos: 1 }])
+
+  // function onDataRecieved(data) {
+  //   dispatch({ type: 'LAUNCHER_DATA_RECEIVED', action: data })
+  // }
 
   function handleGamepadConnected(gamepadIndex) {
     setController(navigator.getGamepads()[0])
@@ -87,14 +90,13 @@ function App() {
   }
 
   function launchValve(open) {
-    console.log('launch valve', open)
     open
       ? dispatch({ type: 'LAUNCH_BUTTON_PRESSED' })
       : dispatch({ type: 'LAUNCH_BUTTON_RELEASED' })
 
     launch(open)
     if (open) {
-      setLastLaunchPsi(Math.trunc(state.launcherData.pressure))
+      setLastLaunchPsi(Math.trunc(launcherData.psi))
     }
   }
 
@@ -125,48 +127,44 @@ function App() {
     position: relative;
     min-height: 100vh;
     overflow: auto;
-    min-width: 410px;
+    min-width: 380px;
   `
 
   const contentCss = css`
-    max-width: 800px;
-    min-width: 380px;
     margin: auto;
-    /* padding: 2rem; */
-    padding: 15px;
-    padding-bottom: 3.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    max-width: 700px;
+    padding-bottom: 1.5rem;
   `
 
-  const gaugePanelCss = css`
+  const gaugePanel = css`
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-evenly;
     text-align: center;
-    margin-top: 20px;
   `
 
   const switchPanel = css`
     display: flex;
-    margin: 20px auto 0px auto;
-    max-width: 440px;
+    margin: 40px 20px;
+    min-width: 340px;
     justify-content: space-evenly;
   `
   return (
-    <Gamepad
-      onConnect={handleGamepadConnected}
-      onRT={handleButtonChange}
-      onButtonChange={handleButtonChange}
-    >
+    <Gamepad onConnect={handleGamepadConnected} onButtonChange={handleButtonChange}>
       <div css={containerCss}>
+        <Header />
         <div css={contentCss}>
-          <div>
-            <img src={Logo} width="100" alt="NodeRockets" />
-          </div>
-
-          <div css={gaugePanelCss}>
+          <div css={gaugePanel}>
             <Gauge
               label="Air Pressure"
               min={0}
               max={150}
-              color={gradient.rgbAt(state.launcherData.pressure / 160)}
-              value={state.launcherData.pressure}
+              color={gradient.rgbAt(launcherData.psi / 160)}
+              value={launcherData.psi}
               valueFormatter={formatAirPressure}
             />
 
@@ -174,8 +172,8 @@ function App() {
               label="Voltage"
               min={0}
               max={5}
-              color={gradient.rgbAt(state.launcherData.voltage / 5)}
-              value={state.launcherData.voltage}
+              color={gradient.rgbAt(launcherData.voltage / 5)}
+              value={launcherData.voltage}
               valueFormatter={formatVoltage}
             />
           </div>
@@ -183,7 +181,7 @@ function App() {
           <div css={switchPanel}>
             <Switch
               label="Air"
-              isOn={state.airPressed}
+              isOn={airPressed}
               onColor="#44AF69"
               handleDown={() => {
                 airValve(true)
@@ -195,33 +193,30 @@ function App() {
 
             <Switch
               label="Water"
-              isOn={state.waterPressed}
+              isOn={waterPressed}
               onColor="#10C7E3"
               handleDown={() => {
                 waterValve(true)
               }}
               handleUp={() => {
-                console.log('water up')
                 waterValve(false)
               }}
             />
 
             <Switch
               label="Launch"
-              isOn={state.launchPressed}
+              isOn={launchPressed}
               onColor="#F8333C"
               handleDown={() => {
-                console.log('launch down')
                 launchValve(true)
               }}
               handleUp={() => {
-                console.log('launch up')
                 launchValve(false)
               }}
             />
           </div>
         </div>
-        <Footer launchPsi={lastLaunchPsi} board={state.launcherData.name} controller={controller} />
+        <Footer launchPsi={lastLaunchPsi} launcher={launcherData} controller={controller} />
       </div>
     </Gamepad>
   )

@@ -14,17 +14,18 @@ function useWebSocket(url) {
   return [socket]
 }
 
-export default function useLauncher(dispatch) {
-  const [socket] = useWebSocket('http://localhost:3001')
+export default function useLauncherIO(dispatch) {
+  const [socket] = useWebSocket('http://:3001')
 
   React.useEffect(() => {
     if (socket) {
       socket.on('data', data => {
         // console.log(data)
-        dispatch({ type: 'LAUNCHER_DATA_RECEIVED', launcherData: data })
+        dispatch({ type: 'LAUNCHER_DATA_RECEIVED', action: data })
       })
 
       return () => {
+        console.log('closing socket')
         socket.close()
       }
     }
@@ -47,17 +48,12 @@ export default function useLauncher(dispatch) {
   }
 
   function launch(on) {
-    console.log('launchy says', on)
     if (on) {
       socket.emit('open-launch')
     } else {
       socket.emit('close-launch')
     }
   }
-
-  // function launch() {
-  //   socket.emit('launch')
-  // }
 
   return [air, water, launch]
 }
